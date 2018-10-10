@@ -89,7 +89,7 @@ void GKSWidget::paintEvent(QPaintEvent *)
     }
 }
 
-void GKSWidget::resizeEvent(QResizeEvent *event)
+void GKSWidget::resizeEvent(QResizeEvent * /*event*/)
 {
   p->mwidth = this->widthMM() * 0.001;
   p->mheight = this->heightMM() * 0.001;
@@ -98,7 +98,7 @@ void GKSWidget::resizeEvent(QResizeEvent *event)
 }
 
 static
-void set_window_size(char *s)
+int find_ws_viewport_size(char *s, double* vpwidth, double* vpheight)
 {
   int sp = 0, *len, *f;
   double *vp;
@@ -109,19 +109,29 @@ void set_window_size(char *s)
       if (*f == 55)
         {
           vp = (double *) (s + sp + 3 * sizeof(int));
-          p->width = nint((vp[1] - vp[0]) / p->mwidth * p->width);
-          p->height = nint((vp[3] - vp[2]) / p->mheight * p->height);
+          *vpwidth = vp[1] - vp[0];
+          *vpheight = vp[3] - vp[2];
+          return 1;
         }
       sp += *len;
       len = (int *) (s + sp);
     }
+  return 0;
 }
 
 void GKSWidget::interpret(char *dl)
 {
-  set_window_size(dl);
+  double vpwidth, vpheight; // desired workspace size in meters
+  if (find_ws_viewport_size(dl, &vpwidth, &vpheight))
+    {
+      int newwidth = nint(vpwidth * this->width()/(this->widthMM()*0.001));
+      int newheight = nint(vpheight * this->height()/(this->heightMM()*0.001));
+      // Note that resize() may not result in the desired size, depending on
+      // the windowing system (especially tiling WMs, but also if the new size
+      // is larger than some system defined maximum, etc).
+      resize(newwidth, newheight);
+    }
 
-  resize(p->width, p->height);
   if (!is_mapped)
     {
       is_mapped = 1;

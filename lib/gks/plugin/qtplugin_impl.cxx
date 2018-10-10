@@ -223,28 +223,6 @@ void init_norm_xform(void)
 }
 
 static
-void resize_window(void)
-{
-  p->width = nint((p->viewport[1] - p->viewport[0]) / p->mwidth * p->width);
-  p->height = nint((p->viewport[3] - p->viewport[2]) / p->mheight * p->height);
-  if (p->pm)
-    {
-      if (p->width  != p->pm->size().width() ||
-          p->height != p->pm->size().height())
-        {
-          delete p->pixmap;
-          delete p->pm;
-
-          p->pm = new QPixmap(p->width, p->height);
-          p->pm->fill(Qt::white);
-
-          p->pixmap = new QPainter(p->pm);
-          p->pixmap->setClipRect(0, 0, p->width, p->height);
-        }
-    }
-}
-
-static
 void set_xform(void)
 {
   double ratio, w, h, x, y;
@@ -1006,11 +984,8 @@ void interp(char *str)
 
           gkss->fontfile = saved_gkss.fontfile;
 
-          if (!p->has_been_resized)
-            {
-              p->window[0] = p->window[2] = 0.0;
-              p->window[1] = p->window[3] = 1.0;
-            }
+          p->window[0] = p->window[2] = 0.0;
+          p->window[1] = p->window[3] = 1.0;
 
           p->viewport[0] = p->viewport[2] = 0.0;
           p->viewport[1] = p->mwidth;
@@ -1180,7 +1155,6 @@ void interp(char *str)
               p->viewport[3] = f_arr_2[1];
             }
 
-          resize_window();
           set_xform();
           init_norm_xform();
           break;
