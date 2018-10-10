@@ -122,7 +122,9 @@ int find_ws_viewport_size(char *s, double* vpwidth, double* vpheight)
 void GKSWidget::interpret(char *dl)
 {
   double vpwidth, vpheight; // desired workspace size in meters
-  if (find_ws_viewport_size(dl, &vpwidth, &vpheight))
+  // Do not attempt to resize if window has been resized, to work
+  // around the qt bug: https://bugreports.qt.io/browse/QTBUG-57608
+  if (find_ws_viewport_size(dl, &vpwidth, &vpheight) && !p->has_been_resized)
     {
       int newwidth = nint(vpwidth * this->width()/(this->widthMM()*0.001));
       int newheight = nint(vpheight * this->height()/(this->heightMM()*0.001));
